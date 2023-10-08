@@ -9,13 +9,14 @@ import javax.swing.JOptionPane;
 public class VentasYStock {
 
 	public static void main(String[] args) {
-		// Declaramos diccionario de stock de productos y declaramos uno auxiliar para asignarle un numero a cada nombre y una lista para el carrito
+		// Declaramos diccionario de precios y stock de productos y declaramos uno auxiliar para asignarle un numero a cada nombre y una lista para el carrito
+		Hashtable<String,Double> precios = new Hashtable<String,Double>();
 		Hashtable<String,Integer> stock = new Hashtable<String,Integer>();
 		Hashtable<Integer,String> id_producto = new Hashtable<Integer,String>();
 		ArrayList<String[]> carrito = new ArrayList<String[]>(); // Declaramos lista de compra [nombre_producto, cantidad_articulos, precio_bruto,]
 		
 		//llenamos los diccionarios con datos
-		llenarDatos(id_producto, stock);
+		llenarDatos(id_producto, stock, precios);
 		
 		//MENU
 		String opt = "";
@@ -32,7 +33,7 @@ public class VentasYStock {
 			switch (opt) {
 			//Añadir producto y su stock
 			case "1":
-				createProduct(id_producto, stock);
+				createProduct(id_producto, stock, precios);
 				opt = "";
 				break;
 			//Consultar stock de producto
@@ -48,7 +49,7 @@ public class VentasYStock {
 			//Comprar productos
 			case "4":
 				final double IVA = 0.21;
-				comprarCantidadProductos(id_producto, stock, carrito);
+				comprarCantidadProductos(id_producto, stock, precios, carrito);
 				opt = "";
 				break;
 			//Salir
@@ -63,7 +64,7 @@ public class VentasYStock {
 		
 	}
 	
-	private static void comprarCantidadProductos(Hashtable<Integer, String> id_producto, Hashtable<String, Integer> stock, ArrayList<String[]> carrito) {
+	private static void comprarCantidadProductos(Hashtable<Integer, String> id_producto, Hashtable<String, Integer> stock, Hashtable<String,Double> precios, ArrayList<String[]> carrito) {
 		final double IVA = 0.21;
 		//Mostramos diccionario y pedimos que se seleccione el producto a comprar
 		String str_product_id = "";
@@ -85,7 +86,7 @@ public class VentasYStock {
 				String product_name = id_producto.get(product_id);
 				
 				//listamos producto en el carrito
-				listarEnCarrito(product_name, stock, carrito);
+				listarEnCarrito(product_name, stock, precios, carrito);
 			}
 		}
 		
@@ -157,7 +158,7 @@ public class VentasYStock {
 	}
 	
 	//metodo para insertar un producto al carrito y actualizar stock [nombre_producto, cantidad_articulos, precio_bruto,]
-	public static void listarEnCarrito(String product_name, Hashtable<String, Integer> stock, ArrayList<String[]> carrito) {
+	public static void listarEnCarrito(String product_name, Hashtable<String, Integer> stock, Hashtable<String,Double> precios, ArrayList<String[]> carrito) {
 		String cantidad = "";
 		cantidad = JOptionPane.showInputDialog("Introduce la cantidad que desees comprar, 0 si no quieres comprar ninguno.\n"
 				+ "Artículo: " + product_name);
@@ -179,7 +180,7 @@ public class VentasYStock {
 		stock.replace(product_name, avalible_stock);
 		
 		//calculamos precio de la cantidad del producto y guardamos datos como array de string
-		double price_num = stock.get(product_name) * quantity;
+		double price_num = precios.get(product_name) * quantity;
 		String price = String.format("%.2f",price_num).replace(",", ".");//me formata a coma cuando paso a string
 		String linea_carrito[] = {product_name,String.valueOf(quantity),price};
 
@@ -226,19 +227,25 @@ public class VentasYStock {
 	}
 	
 	//método para crear un producto nuevo
-	public static void createProduct(Hashtable<Integer,String> id_producto, Hashtable<String,Integer> stock) {
+	public static void createProduct(Hashtable<Integer,String> id_producto, Hashtable<String,Integer> stock, Hashtable<String,Double> precios) {
 		String nombre = JOptionPane.showInputDialog("Introduce el nombre del nuevo producto:");
 		String str_cantidad_stock = JOptionPane.showInputDialog("Introduce cantidad de stock del producto:");
 		while (!stringEsNumeroNatural(str_cantidad_stock)) {
 			str_cantidad_stock = JOptionPane.showInputDialog("Datos no numéricos naturales, introduce cantidad de stock del producto:");
 		}
+		
+		String str_precio = JOptionPane.showInputDialog("Introduce precio del producto:");
+		while (!stringEsNumeroPositivo(str_precio)) {
+			str_precio = JOptionPane.showInputDialog("Datos no numéricos positivos, introduce precio del producto:");
+		}
 		//creamos id de referencia y añadimos el producto
 		id_producto.put(id_producto.size(), nombre);
 		stock.put(nombre, Integer.parseInt(str_cantidad_stock));
+		precios.put(nombre, Double.parseDouble(str_precio));
 	}
 	
 	//Llena los datos de los dos diccionarios con valores preestablecidos
-	public static void llenarDatos(Hashtable<Integer,String> id_producto, Hashtable<String,Integer> stock) {
+	public static void llenarDatos(Hashtable<Integer,String> id_producto, Hashtable<String,Integer> stock, Hashtable<String,Double> precios) {
 		//introducimos datos de stock de prooductos
 		stock.put("Play Station 6 color red", 5);
 		stock.put("Banana de color azul 🍌", 8);
@@ -251,12 +258,13 @@ public class VentasYStock {
 		stock.put("Antivirus Avast 2023", 33);
 		stock.put("Chainsaw Man Temporada 1", 200);
 		
-		//llenamos con id numerico por cada elemento de productos
+		//llenamos con id numerico por cada elemento de productos y llenamos con precios random
 		Enumeration<String> ids = stock.keys();
 		int contador = 0;
 		while (ids.hasMoreElements()) {
 			String nombre = ids.nextElement();
 			id_producto.put(contador, nombre);
+			precios.put(nombre, (double)Math.random()*100+1);
 			contador++;
 		}
 	}
